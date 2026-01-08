@@ -1,0 +1,287 @@
+/* =====================
+   GLOBAL RESET
+===================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8f9fa;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* =====================
+   CONTAINER (STANDARD)
+===================== */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 5%;
+}
+
+/* =====================
+   HEADER
+===================== */
+header {
+  background: linear-gradient(to right, #812a97, #512da8);
+  padding: 20px 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+}
+
+header h1 {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 15px;
+  font-weight: 500;
+  font-size: 18px;
+  position: relative;
+}
+
+nav a:hover {
+  color: #ffeb3b;
+}
+
+.register-now {
+  background: #ffeb3b;
+  color: #512da8;
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* =====================
+   HERO
+===================== */
+.hero {
+  width: 100%;
+  background: linear-gradient(to right, #6a1b9a, #512da8);
+  color: white;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.hero h2 {
+  font-size: 42px;
+}
+
+.hero p {
+  font-size: 20px;
+  color: #e1bee7;
+}
+
+/* =====================
+   FILTER BAR (STANDARD)
+===================== */
+.filters {
+  width: 100%;
+  background: #f9f9fb;
+  padding: 20px 0;
+}
+
+.filters-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* SEARCH */
+.search-box {
+  position: relative;
+  flex: 1;
+}
+
+.search-box input {
+  width: 100%;
+  height: 46px;
+  padding: 0 18px 0 44px;
+  border-radius: 25px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  transition: 0.3s ease;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #673ab7;
+  box-shadow: 0 0 0 3px rgba(103, 58, 183, 0.15);
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 14px;
+}
+
+/* DROPDOWN */
+.filter-dropdown {
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 25px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* VIEW TOGGLE */
+.view-toggle {
+  display: flex;
+  background: #f1f1f5;
+  border-radius: 25px;
+  padding: 4px;
+}
+
+.view-btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+  color: #555;
+  transition: 0.3s ease;
+}
+
+.view-btn.active {
+  background: #673ab7;
+  color: white;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .filters-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .view-toggle {
+    align-self: flex-start;
+  }
+}
+
+
+/* =====================
+   EVENTS GRID
+===================== */
+.grid {
+  width: 100%;
+  padding: 40px 5%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+.grid.list-view {
+  grid-template-columns: 1fr;
+}
+
+/* =====================
+   EVENT CARD
+===================== */
+.card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+}
+
+.card-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 20px;
+  flex-grow: 1;
+}
+
+.card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.card-date {
+  color: #673ab7;
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.register-btn {
+  background: #673ab7;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+}
+
+/* =====================
+   RESPONSIVE
+===================== */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .view-toggle {
+    margin-left: 0;
+    width: fit-content;
+  }
+
+  .hero h2 {
+    font-size: 32px;
+  }
+}

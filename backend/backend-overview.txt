@@ -1,0 +1,33 @@
+Backend Overview – Simple Explanation
+
+The backend is the "engine room" of the Proup application. It runs on a server and does all the work that the website or mobile app asks for. Think of it as a very organized office that receives requests, looks up information, and sends back answers.
+
+What It Does
+1. Stores Data – All the information about users, events, and registrations is kept in a database (like a digital filing cabinet).
+2. Handles Logins – When a user signs up or logs in, the backend checks the credentials, creates a secure token, and remembers who the user is.
+3. Manages Events – Organizers can create, edit, or delete events. Everyone can view the list of events, search for them, and see details.
+4. Tracks Registrations – Users can sign up for events. The backend records who is attending which event and prevents duplicate sign‑ups.
+5. Keeps Everything Safe – It checks that only the right people can do certain actions (e.g., only organizers can create events).
+
+Main Parts (Folders & Files)
+- server.js: The front desk. Starts the server, opens the port, and connects routes.
+- config/db.js: The connection line to the filing cabinet (MongoDB).
+- middleware/: Security guards that verify a user’s badge (JWT token) and enforce role permissions.
+- models/: Blueprints for the data. Defines what a User, Event, and Registration look like.
+- routes/: Service counters. Define actions like sign‑up, log‑in, list events, register for an event.
+- .env: Secret notes (passwords, keys) that the server uses but never shows to anyone.
+- package.json: A checklist of tools the server needs (Express, Mongoose, JWT, etc.) and scripts to start or develop the server.
+- scripts/seedEvents.js (not shown): Helper that pre‑loads some example events.
+
+How a Typical Interaction Works
+1. User logs in – The app sends email & password. The backend checks them, creates a token (digital badge), and sends it back.
+2. User asks for data – e.g., "show me all events". The app includes the token. The backend’s security guard verifies the token, then the events service fetches the list from the database and returns it.
+3. Organizer creates an event – The organizer’s request includes the token, the guard checks the role is "organizer", and the event is saved.
+4. User registers for an event – The backend records the registration, ensuring the same user can’t register twice.
+
+Why This Matters
+- Reliability: All data is stored centrally, so the front‑end always sees the same information.
+- Security: Only authorized people can change critical data.
+- Scalability: The design lets you add more features (payments, notifications) without rewriting the whole system.
+
+This file gives a high‑level, non‑technical view of how the backend works and why it’s organized this way.

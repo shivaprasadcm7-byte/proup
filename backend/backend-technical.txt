@@ -1,0 +1,61 @@
+Technical Backend Overview
+
+## Architecture
+- **Node.js + Express** server (`server.js`) – entry point that creates the Express app, loads middleware, and mounts route handlers.
+- **MongoDB (Mongoose)** – database accessed via `config/db.js`. Mongoose provides schemas and models for data validation and relationships.
+- **Environment variables** (`.env`) – store secrets like `MONGODB_URI`, `JWT_SECRET`, and `PORT`.
+
+## Data Models (Mongoose Schemas)
+- **User** (`models/User.js`)
+  - Fields: `name`, `email` (unique), `password` (hashed with bcrypt), `role` (`attendee` | `organizer`), `registeredEvents` (array of Event refs).
+  - Pre‑save hook hashes password; method `matchPassword` compares a plain password with the stored hash.
+- **Event** (`models/Event.js`)
+  - Fields: `title`, `date`, `image`, `description`, `location`, `price`, `category`, `eventType` (`online`/`offline`/`hybrid`), `organizer` (User ref), `registrationCount`, etc.
+  - Populated with organizer details when queried.
+- **Registration** (`models/Registration.js`)
+  - Links a `user` to an `event` with a `status` (`confirmed`/`pending`/`cancelled`).
+  - Unique compound index on `{user, event}` prevents duplicate registrations.
+
+## Middleware
+- **auth.js** –
+  - `protect`: verifies JWT from `Authorization: Bearer <token>`, loads the user, attaches to `req.user`.
+  - `authorize(...roles)`: checks `req.user.role` against allowed roles (e.g., only `organizer` can create events).
+- **errorHandler.js** – Central error handling; formats Mongoose errors (CastError, duplicate key, validation) and sends a JSON error response.
+
+## Routes (API Endpoints)
+- **Auth (`routes/auth.js`)
+  - `POST /api/auth/signup` – register any user (default role `attendee`).
+  - `POST /api/auth/login` – login, returns JWT.
+  - Student‑specific: `/student/signup`, `/student/login` (role enforced as `attendee`).
+  - Organizer‑specific: `/organizer/signup`, `/organizer/login` (role enforced as `organizer`).
+  - `GET /api/auth/me` – returns current user profile (protected).
+  - `GET /api/auth/verify` – verifies token and returns user data (protected).
+- **Events (`routes/events.js`)
+  - `GET /api/events` – list events, supports query filters (`search`, `category`, `eventType`, `sort`).
+  - `GET /api/events/:id` – get single event details.
+  - `POST /api/events` – create event (protected, `organizer` role only).
+  - `PUT /api/events/:id` – update event (only the owning organizer).
+  - `DELETE /api/events/:id` – delete event (only the owning organizer).
+- **Registrations (`routes/registrations.js`)
+  - `POST /api/registrations` – register logged‑in user for an event.
+  - `GET /api/registrations/user/:userId` – list a user’s registrations (protected).
+  - `GET /api/registrations/check/:eventId` – check if current user is already registered.
+  - `DELETE /api/registrations/:id` – cancel a registration (owner only).
+
+## Security Flow
+1. Client stores JWT after login.
+2. For protected routes, the `protect` middleware validates the token and populates `req.user`.
+3. `authorize` further restricts access based on `role`.
+4. All route handlers assume `req.user` is trustworthy and use it for ownership checks (e.g., event organizer ID).
+
+## Error Handling & Validation
+- Input validation is performed with `express-validator` in each route.
+- Errors are passed to `next(err)` and caught by `errorHandler.js`, which returns a consistent JSON error shape.
+
+## Development Scripts (package.json)
+- `npm run dev` – starts server with `nodemon` for hot‑reloading.
+- `npm run start` – runs the server in production mode.
+- `npm run seed` – executes `scripts/seedEvents.js` to populate the DB with sample events.
+
+---
+This file provides a concise, technical snapshot of the backend architecture, data schema, middleware, routing, and security mechanisms used in the Prou​p project.

@@ -1,0 +1,95 @@
+/* Role selection section */
+.role-selection {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.role-header h1 {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.role-header p {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 50px;
+}
+
+/* Grid */
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 40px;
+}
+
+/* Card */
+.role-card {
+  background: white;
+  padding: 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.role-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.role-card h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+.role-card p {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+/* Buttons */
+.role-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+
+  padding: 18px 40px;
+  border-radius: 40px;
+  border: none;
+
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+
+
+.role-button.student {
+  background: #673ab7;
+  color: white;
+}
+
+.role-button.student:hover {
+  background: #512da8;
+}
+
+.role-button.organizer {
+  background: #ffeb3b;
+  color: #512da8;
+}
+
+.role-button.organizer:hover {
+  background: #fdd835;
+}
