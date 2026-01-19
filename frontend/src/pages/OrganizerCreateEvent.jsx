@@ -64,6 +64,16 @@ const OrganizerCreateEvent = () => {
     setError("");
 
     try {
+      let imageUrl = "https://images.unsplash.com/photo-1540575467063-178a50c2df87";
+
+      // Upload image if one is selected
+      if (image) {
+        const uploadResponse = await eventService.uploadImage(image);
+        if (uploadResponse.success) {
+          imageUrl = uploadResponse.data.imageUrl;
+        }
+      }
+
       // Format data for backend
       const eventData = {
         title: formData.title,
@@ -75,7 +85,7 @@ const OrganizerCreateEvent = () => {
         eventType: formData.eventType,
         duration: formData.duration || `${formData.time}`,
         capacity: formData.capacity,
-        image: preview || "https://images.unsplash.com/photo-1540575467063-178a50c2df87",
+        image: imageUrl,
         popularity: 50,
       };
 

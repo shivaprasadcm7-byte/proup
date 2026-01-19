@@ -57,6 +57,23 @@ const eventService = {
             throw error.response?.data || error;
         }
     },
+
+    // Upload image
+    uploadImage: async (imageFile) => {
+        try {
+            const formData = new FormData();
+            formData.append('image', imageFile);
+
+            const response = await api.post('/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
 };
 
 export default eventService;

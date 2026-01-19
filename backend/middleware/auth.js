@@ -19,15 +19,18 @@ const protect = async (req, res, next) => {
             // Get user from token
             req.user = await User.findById(decoded.id).select('-password');
 
-            next();
-        } catch (error) {
-            console.error(error);
-            res.status(401).json({ message: 'Not authorized, token failed' });
-        }
-    }
+            // Check if user still exists
+            if (!req.user) {
+                return res.status(401).json({ message: 'User no longer exists' });
+            }
 
-    if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
+            return next();
+        } catch (error) {
+            console.error('Token verification failed:', error.message);
+            return res.status(401).json({ message: 'Not authorized, token failed' });
+        }
+    } else {
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
 };
 
