@@ -13,6 +13,11 @@ import ContactPage from "./pages/ContactPage";
 import Achivements from "./pages/Achivements";
 import EventDisplay from "./pages/EventDisplay";
 import OrganizerPrizeAssignment from "./pages/OrganizerPrizeAssignment";
+import EnterprisePage from "./pages/EnterprisePage";
+import PricingPage from "./pages/PricingPage";
+import BlogPage from "./pages/BlogPage";
+import StudentDashboard from "./pages/StudentDashboard";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
 
 
 const App = () => {
@@ -33,6 +38,11 @@ const App = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/achievements" element={<Achivements />} />
           <Route path="/organizer/manage-prizes" element={<OrganizerPrizeAssignment />} />
+          <Route path="/enterprise" element={<EnterprisePage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/organizer/dashboard" element={<OrganizerDashboard />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

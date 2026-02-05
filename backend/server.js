@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
@@ -48,9 +47,6 @@ const authLimiter = rateLimit({
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Serve uploaded images as static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes (apply rate limiter to auth)
 app.use('/api/auth', authLimiter, authRoutes);

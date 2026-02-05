@@ -4,6 +4,7 @@ const Registration = require('../models/Registration');
 const Event = require('../models/Event');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const sendEmail = require('../utils/sendEmail');
 
 // @route   POST /api/registrations
 // @desc    Register for an event
@@ -47,6 +48,41 @@ router.post('/', protect, async (req, res) => {
         const populatedRegistration = await Registration.findById(registration._id)
             .populate('event')
             .populate('user', 'name email');
+
+        // Send confirmation email to the user
+        try {
+            const user = await User.findById(req.user.id);
+            if (user && user.email) {
+                const emailMessage = `
+Hello ${user.name || 'Attendee'},
+
+🎉 You have successfully registered for the event!
+
+📌 Event Details:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📛 Event: ${event.title}
+📅 Date: ${event.date}
+📍 Location: ${event.location || 'TBA'}
+🎫 Status: Confirmed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+We look forward to seeing you there!
+
+Best regards,
+The Proup Team
+                `.trim();
+
+                await sendEmail({
+                    email: user.email,
+                    subject: `✅ Registration Confirmed: ${event.title}`,
+                    message: emailMessage,
+                });
+                console.log(`Confirmation email sent to ${user.email}`);
+            }
+        } catch (emailError) {
+            // Log email error but don't fail the registration
+            console.error('Failed to send confirmation email:', emailError.message);
+        }
 
         res.status(201).json({
             success: true,

@@ -1,12 +1,45 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/uploadMiddleware');
+const cloudinary = require('../config/cloudinary');
 const { protect } = require('../middleware/auth');
 
+// Helper function to upload buffer to Cloudinary
+const uploadToCloudinary = (fileBuffer, options = {}) => {
+    return new Promise((resolve, reject) => {
+        const uploadOptions = {
+            folder: 'proup-events',
+            resource_type: 'image',
+            // Automatic format optimization (WebP for supported browsers)
+            fetch_format: 'auto',
+            // Automatic quality optimization
+            quality: 'auto',
+            // Limit max width for performance
+            transformation: [
+                { width: 1200, crop: 'limit' }
+            ],
+            ...options
+        };
+
+        const uploadStream = cloudinary.uploader.upload_stream(
+            uploadOptions,
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+
+        uploadStream.end(fileBuffer);
+    });
+};
+
 // @route   POST /api/upload
-// @desc    Upload an image file
+// @desc    Upload an image to Cloudinary
 // @access  Private
-router.post('/', protect, upload.single('image'), (req, res) => {
+router.post('/', protect, upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -15,24 +48,28 @@ router.post('/', protect, upload.single('image'), (req, res) => {
             });
         }
 
-        // Construct the image URL
-        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        // Upload to Cloudinary
+        const result = await uploadToCloudinary(req.file.buffer, {
+            public_id: `event_${Date.now()}`
+        });
 
         res.status(201).json({
             success: true,
-            message: 'Image uploaded successfully',
+            message: 'Image uploaded successfully to cloud storage',
             data: {
-                filename: req.file.filename,
-                imageUrl: imageUrl,
-                size: req.file.size,
-                mimetype: req.file.mimetype
+                imageUrl: result.secure_url,
+                publicId: result.public_id,
+                width: result.width,
+                height: result.height,
+                format: result.format,
+                size: result.bytes
             }
         });
     } catch (error) {
-        console.error('Upload error:', error);
+        console.error('Cloudinary upload error:', error);
         res.status(500).json({
             success: false,
-            message: 'Error uploading image'
+            message: 'Error uploading image to cloud storage'
         });
     }
 });
@@ -61,3 +98,4 @@ router.use((error, req, res, next) => {
 });
 
 module.exports = router;
+
