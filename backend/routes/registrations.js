@@ -4,6 +4,7 @@ const Registration = require('../models/Registration');
 const Event = require('../models/Event');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const validateObjectId = require('../middleware/validateObjectId');
 const sendEmail = require('../utils/sendEmail');
 
 // @route   POST /api/registrations
@@ -100,11 +101,11 @@ The Proup Team
 // @route   GET /api/registrations/user/:userId
 // @desc    Get user's registrations
 // @access  Private
-router.get('/user/:userId', protect, async (req, res) => {
+router.get('/user/:userId', protect, validateObjectId('userId'), async (req, res) => {
     try {
         // Make sure user can only view their own registrations
         if (req.params.userId !== req.user.id) {
-            return res.status(401).json({ message: 'Not authorized' });
+            return res.status(403).json({ message: 'Not authorized' });
         }
 
         const registrations = await Registration.find({ user: req.params.userId })
@@ -123,10 +124,20 @@ router.get('/user/:userId', protect, async (req, res) => {
 });
 
 // @route   GET /api/registrations/event/:eventId
-// @desc    Get event's registrations (for organizers)
+// @desc    Get event's registrations (for organizers only)
 // @access  Private
-router.get('/event/:eventId', protect, async (req, res) => {
+router.get('/event/:eventId', protect, validateObjectId('eventId'), async (req, res) => {
     try {
+        // Verify that the requesting user is the organizer of this event
+        const event = await Event.findById(req.params.eventId);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        if (event.organizer.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to view registrations for this event' });
+        }
+
         const registrations = await Registration.find({ event: req.params.eventId })
             .populate('user', 'name email')
             .sort({ createdAt: -1 });
@@ -145,7 +156,7 @@ router.get('/event/:eventId', protect, async (req, res) => {
 // @route   DELETE /api/registrations/:id
 // @desc    Cancel registration
 // @access  Private
-router.delete('/:id', protect, async (req, res) => {
+router.delete('/:id', protect, validateObjectId('id'), async (req, res) => {
     try {
         const registration = await Registration.findById(req.params.id);
 
@@ -155,7 +166,7 @@ router.delete('/:id', protect, async (req, res) => {
 
         // Make sure user owns the registration
         if (registration.user.toString() !== req.user.id) {
-            return res.status(401).json({ message: 'Not authorized' });
+            return res.status(403).json({ message: 'Not authorized' });
         }
 
         // Update event registration count
@@ -185,7 +196,7 @@ router.delete('/:id', protect, async (req, res) => {
 // @route   GET /api/registrations/check/:eventId
 // @desc    Check if user is registered for event
 // @access  Private
-router.get('/check/:eventId', protect, async (req, res) => {
+router.get('/check/:eventId', protect, validateObjectId('eventId'), async (req, res) => {
     try {
         const registration = await Registration.findOne({
             user: req.user.id,

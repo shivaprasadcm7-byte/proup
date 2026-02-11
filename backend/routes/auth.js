@@ -12,17 +12,26 @@ const generateToken = (id) => {
     });
 };
 
+// Reusable password validation chain
+const passwordValidation = body('password')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters')
+    .matches(/[A-Z]/)
+    .withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/)
+    .withMessage('Password must contain at least one lowercase letter')
+    .matches(/\d/)
+    .withMessage('Password must contain at least one number');
+
 // @route   POST /api/auth/signup
 // @desc    Register new user
 // @access  Public
 router.post(
     '/signup',
     [
-        body('name').trim().notEmpty().withMessage('Name is required'),
-        body('email').isEmail().withMessage('Please include a valid email'),
-        body('password')
-            .isLength({ min: 6 })
-            .withMessage('Password must be at least 6 characters'),
+        body('name').trim().notEmpty().withMessage('Name is required').escape(),
+        body('email').isEmail().normalizeEmail().withMessage('Please include a valid email'),
+        passwordValidation,
     ],
     async (req, res) => {
         const errors = validationResult(req);
@@ -30,7 +39,8 @@ router.post(
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { name, email, password, role } = req.body;
+        const { name, email, password } = req.body;
+        // Role is NOT accepted from body — always defaults to attendee
 
         try {
             // Check if user exists
@@ -39,12 +49,12 @@ router.post(
                 return res.status(400).json({ message: 'User already exists' });
             }
 
-            // Create user
+            // Create user — role is always 'attendee' (never from request body)
             user = await User.create({
                 name,
                 email,
                 password,
-                role: role || 'attendee',
+                role: 'attendee',
             });
 
             // Create token
@@ -73,7 +83,7 @@ router.post(
 router.post(
     '/login',
     [
-        body('email').isEmail().withMessage('Please include a valid email'),
+        body('email').isEmail().normalizeEmail().withMessage('Please include a valid email'),
         body('password').notEmpty().withMessage('Password is required'),
     ],
     async (req, res) => {
@@ -163,11 +173,9 @@ router.get('/verify', protect, async (req, res) => {
 router.post(
     '/student/signup',
     [
-        body('name').trim().notEmpty().withMessage('Name is required'),
-        body('email').isEmail().withMessage('Please include a valid email'),
-        body('password')
-            .isLength({ min: 6 })
-            .withMessage('Password must be at least 6 characters'),
+        body('name').trim().notEmpty().withMessage('Name is required').escape(),
+        body('email').isEmail().normalizeEmail().withMessage('Please include a valid email'),
+        passwordValidation,
     ],
     async (req, res) => {
         const errors = validationResult(req);
@@ -218,7 +226,7 @@ router.post(
 router.post(
     '/student/login',
     [
-        body('email').isEmail().withMessage('Please include a valid email'),
+        body('email').isEmail().normalizeEmail().withMessage('Please include a valid email'),
         body('password').notEmpty().withMessage('Password is required'),
     ],
     async (req, res) => {
@@ -275,11 +283,9 @@ router.post(
 router.post(
     '/organizer/signup',
     [
-        body('name').trim().notEmpty().withMessage('Name is required'),
-        body('email').isEmail().withMessage('Please include a valid email'),
-        body('password')
-            .isLength({ min: 6 })
-            .withMessage('Password must be at least 6 characters'),
+        body('name').trim().notEmpty().withMessage('Name is required').escape(),
+        body('email').isEmail().normalizeEmail().withMessage('Please include a valid email'),
+        passwordValidation,
     ],
     async (req, res) => {
         const errors = validationResult(req);
@@ -330,7 +336,7 @@ router.post(
 router.post(
     '/organizer/login',
     [
-        body('email').isEmail().withMessage('Please include a valid email'),
+        body('email').isEmail().normalizeEmail().withMessage('Please include a valid email'),
         body('password').notEmpty().withMessage('Password is required'),
     ],
     async (req, res) => {

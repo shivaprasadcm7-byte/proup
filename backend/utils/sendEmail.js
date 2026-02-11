@@ -11,14 +11,14 @@ const sendEmail = async (options) => {
             pass: process.env.SMTP_PASSWORD,
         },
         tls: {
-            // Allow less secure TLS versions for compatibility
-            rejectUnauthorized: false
+            // Only disable certificate verification in development
+            rejectUnauthorized: process.env.NODE_ENV === 'production',
         }
     });
 
     // Define email options
     const message = {
-        from: `${process.env.FROM_NAME} <${process.env.SMTP_EMAIL}>`, // Use actual SMTP email as sender
+        from: `${process.env.FROM_NAME} <${process.env.SMTP_EMAIL}>`,
         to: options.email,
         subject: options.subject,
         text: options.message,

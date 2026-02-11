@@ -5,6 +5,7 @@ const Achievement = require('../models/Achievement');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
 const { protect, authorize } = require('../middleware/auth');
+const validateObjectId = require('../middleware/validateObjectId');
 
 // @route   GET /api/achievements/my
 // @desc    Get current user's achievements
@@ -72,7 +73,7 @@ router.get('/stats', protect, async (req, res) => {
 // @route   GET /api/achievements/user/:userId
 // @desc    Get all achievements for a specific user
 // @access  Private
-router.get('/user/:userId', protect, async (req, res) => {
+router.get('/user/:userId', protect, validateObjectId('userId'), async (req, res) => {
     try {
         const achievements = await Achievement.find({ user: req.params.userId })
             .populate('event', 'title date image category')
@@ -93,7 +94,7 @@ router.get('/user/:userId', protect, async (req, res) => {
 // @route   GET /api/achievements/event/:eventId
 // @desc    Get all achievements for a specific event
 // @access  Private
-router.get('/event/:eventId', protect, async (req, res) => {
+router.get('/event/:eventId', protect, validateObjectId('eventId'), async (req, res) => {
     try {
         const achievements = await Achievement.find({ event: req.params.eventId })
             .populate('user', 'name email')
@@ -134,7 +135,7 @@ router.get('/organizer/events', protect, authorize('organizer'), async (req, res
 // @route   GET /api/achievements/organizer/events/:eventId/participants
 // @desc    Get participants of an event for prize assignment
 // @access  Private (Organizers only)
-router.get('/organizer/events/:eventId/participants', protect, authorize('organizer'), async (req, res) => {
+router.get('/organizer/events/:eventId/participants', protect, authorize('organizer'), validateObjectId('eventId'), async (req, res) => {
     try {
         // Verify organizer owns this event
         const event = await Event.findById(req.params.eventId);
@@ -272,7 +273,7 @@ router.post(
 // @route   PUT /api/achievements/:id
 // @desc    Update an achievement
 // @access  Private (Organizers only)
-router.put('/:id', protect, authorize('organizer'), async (req, res) => {
+router.put('/:id', protect, authorize('organizer'), validateObjectId('id'), async (req, res) => {
     try {
         let achievement = await Achievement.findById(req.params.id);
 
@@ -309,7 +310,7 @@ router.put('/:id', protect, authorize('organizer'), async (req, res) => {
 // @route   DELETE /api/achievements/:id
 // @desc    Delete an achievement
 // @access  Private (Organizers only)
-router.delete('/:id', protect, authorize('organizer'), async (req, res) => {
+router.delete('/:id', protect, authorize('organizer'), validateObjectId('id'), async (req, res) => {
     try {
         const achievement = await Achievement.findById(req.params.id);
 

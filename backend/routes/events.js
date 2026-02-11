@@ -3,6 +3,10 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const Event = require('../models/Event');
 const { protect, authorize } = require('../middleware/auth');
+const validateObjectId = require('../middleware/validateObjectId');
+
+// Helper: escape regex special characters to prevent ReDoS / injection
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // @route   GET /api/events
 // @desc    Get all events
@@ -15,9 +19,10 @@ router.get('/', async (req, res) => {
         let query = {};
 
         if (search) {
+            const sanitizedSearch = escapeRegex(search);
             query.$or = [
-                { title: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
+                { title: { $regex: sanitizedSearch, $options: 'i' } },
+                { description: { $regex: sanitizedSearch, $options: 'i' } },
             ];
         }
 
@@ -55,7 +60,7 @@ router.get('/', async (req, res) => {
 // @route   GET /api/events/:id
 // @desc    Get single event
 // @access  Public
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateObjectId('id'), async (req, res) => {
     try {
         const event = await Event.findById(req.params.id).populate('organizer', 'name email');
 
@@ -69,9 +74,6 @@ router.get('/:id', async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        if (error.kind === 'ObjectId') {
-            return res.status(404).json({ message: 'Event not found' });
-        }
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -85,7 +87,7 @@ router.post(
         protect,
         authorize('organizer'),
         [
-            body('title').trim().notEmpty().withMessage('Title is required'),
+            body('title').trim().notEmpty().withMessage('Title is required').escape(),
             body('date').notEmpty().withMessage('Date is required'),
             body('image').notEmpty().withMessage('Image URL is required'),
             body('description').trim().notEmpty().withMessage('Description is required'),
@@ -101,9 +103,21 @@ router.post(
         }
 
         try {
+            // Whitelist allowed fields — prevents mass assignment of organizer, registrationCount, etc.
+            const { title, date, image, description, location, price, category, duration, capacity, eventType } = req.body;
+
             const eventData = {
-                ...req.body,
-                organizer: req.user.id,
+                title,
+                date,
+                image,
+                description,
+                location,
+                price,
+                category,
+                duration,
+                capacity,
+                eventType,
+                organizer: req.user.id,  // Always set from authenticated user
             };
 
             const event = await Event.create(eventData);
@@ -122,7 +136,7 @@ router.post(
 // @route   PUT /api/events/:id
 // @desc    Update event
 // @access  Private (Organizer of the event only)
-router.put('/:id', protect, authorize('organizer'), async (req, res) => {
+router.put('/:id', protect, authorize('organizer'), validateObjectId('id'), async (req, res) => {
     try {
         let event = await Event.findById(req.params.id);
 
@@ -132,10 +146,19 @@ router.put('/:id', protect, authorize('organizer'), async (req, res) => {
 
         // Make sure user is event organizer
         if (event.organizer.toString() !== req.user.id) {
-            return res.status(401).json({ message: 'Not authorized to update this event' });
+            return res.status(403).json({ message: 'Not authorized to update this event' });
         }
 
-        event = await Event.findByIdAndUpdate(req.params.id, req.body, {
+        // Whitelist allowed update fields — prevents overwriting organizer, registrationCount, etc.
+        const allowedFields = ['title', 'date', 'image', 'description', 'location', 'price', 'category', 'duration', 'capacity', 'eventType'];
+        const updateData = {};
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updateData[field] = req.body[field];
+            }
+        }
+
+        event = await Event.findByIdAndUpdate(req.params.id, updateData, {
             new: true,
             runValidators: true,
         });
@@ -153,7 +176,7 @@ router.put('/:id', protect, authorize('organizer'), async (req, res) => {
 // @route   DELETE /api/events/:id
 // @desc    Delete event
 // @access  Private (Organizer of the event only)
-router.delete('/:id', protect, authorize('organizer'), async (req, res) => {
+router.delete('/:id', protect, authorize('organizer'), validateObjectId('id'), async (req, res) => {
     try {
         const event = await Event.findById(req.params.id);
 
@@ -163,7 +186,7 @@ router.delete('/:id', protect, authorize('organizer'), async (req, res) => {
 
         // Make sure user is event organizer
         if (event.organizer.toString() !== req.user.id) {
-            return res.status(401).json({ message: 'Not authorized to delete this event' });
+            return res.status(403).json({ message: 'Not authorized to delete this event' });
         }
 
         await event.deleteOne();

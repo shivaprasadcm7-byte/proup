@@ -5,6 +5,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
+const mongoSanitize = require('./middleware/mongoSanitize');
+const xssSanitize = require('./middleware/xssSanitize');
 
 // Route imports
 const authRoutes = require('./routes/auth');
@@ -19,9 +21,17 @@ connectDB();
 // Initialize express app
 const app = express();
 
-// Security middleware
+// Security middleware - Helmet with tightened config
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" } // Allow images to load cross-origin
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+    xssFilter: true,
+    noSniff: true,
+    hsts: {
+        maxAge: 31536000, // 1 year in seconds
+        includeSubDomains: true,
+        preload: true,
+    },
 }));
 
 // CORS configuration
@@ -35,10 +45,26 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Rate limiting for auth routes
-const authLimiter = rateLimit({
+// NoSQL injection prevention
+app.use(mongoSanitize);
+
+// XSS (Cross-Site Scripting) prevention
+app.use(xssSanitize);
+
+// Global rate limiter — applies to all /api routes
+const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // 10 attempts per window
+    max: 100, // 100 requests per 15-minute window
+    message: { message: 'Too many requests, please try again later' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api', globalLimiter);
+
+// Stricter rate limiter for auth routes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
     message: { message: 'Too many login attempts, please try again after 15 minutes' },
     standardHeaders: true,
     legacyHeaders: false
@@ -48,7 +74,19 @@ const authLimiter = rateLimit({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Routes (apply rate limiter to auth)
+// HTTP Parameter Pollution protection — keep only the last value for each query param
+app.use((req, res, next) => {
+    if (req.query) {
+        for (const key in req.query) {
+            if (Array.isArray(req.query[key])) {
+                req.query[key] = req.query[key][req.query[key].length - 1];
+            }
+        }
+    }
+    next();
+});
+
+// Routes (apply stricter rate limiter to auth)
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/registrations', registrationRoutes);
@@ -57,7 +95,7 @@ app.use('/api/achievements', achievementRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'Server is running', timestamp: new Date() });
+    res.json({ status: 'OK' });
 });
 
 // Root route
